@@ -1,0 +1,23 @@
+<template>
+    <div class="launcher-container">
+        <span class="chat-tooltip">
+            Blush Project Guide
+        </span>
+
+        <button
+            class="chat-button"
+            type="button"
+            title="Open Blush Project Guide"
+            aria-label="Open Blush Project Guide"
+            onclick={handleOpenChat}
+            disabled={isOpening}>
+
+            <lightning-icon
+                icon-name="utility:chat"
+                size="medium"
+                variant="inverse"
+                alternative-text="Chat with Blush Project Guide">
+            </lightning-icon>
+        </button>
+    </div>
+</template>

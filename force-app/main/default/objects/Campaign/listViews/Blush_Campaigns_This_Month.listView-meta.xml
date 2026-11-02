@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Blush_Campaigns_This_Month</fullName>
+    <columns>CAMPAIGN.NAME</columns>
+    <columns>CAMPAIGN.CAMPAIGN_TYPE</columns>
+    <columns>CAMPAIGN.STATUS</columns>
+    <columns>CAMPAIGN.START_DATE</columns>
+    <columns>CAMPAIGN.END_DATE</columns>
+    <columns>CAMPAIGN.ACTIVE</columns>
+    <filterScope>Everything</filterScope>
+    <filters>
+        <field>CAMPAIGN.START_DATE</field>
+        <operation>lessThan</operation>
+        <value>NEXT_MONTH</value>
+    </filters>
+    <filters>
+        <field>CAMPAIGN.END_DATE</field>
+        <operation>greaterOrEqual</operation>
+        <value>THIS_MONTH</value>
+    </filters>
+    <label>Campaigns This Month</label>
+</ListView>

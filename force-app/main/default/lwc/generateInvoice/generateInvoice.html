@@ -1,0 +1,13 @@
+<template>
+    <lightning-quick-action-panel header="Generate Invoice">
+        <p class="slds-m-bottom_small">Preview the tax invoice in a new tab, or save it as a PDF in this order's Files.</p>
+        <template lwc:if={isSaving}>
+            <lightning-spinner alternative-text="Saving invoice" size="small"></lightning-spinner>
+        </template>
+        <div slot="footer">
+            <lightning-button label="Cancel" onclick={handleClose} class="slds-m-right_x-small"></lightning-button>
+            <lightning-button label="Preview PDF" icon-name="utility:preview" onclick={handlePreview} class="slds-m-right_x-small"></lightning-button>
+            <lightning-button variant="brand" label="Save PDF to Order" icon-name="utility:save" onclick={handleSave} disabled={isSaving}></lightning-button>
+        </div>
+    </lightning-quick-action-panel>
+</template>

@@ -1,0 +1,612 @@
+<apex:page controller="RazorpayCheckoutVFController"
+    showHeader="false"
+    sidebar="false"
+    standardStylesheets="false"
+    applyHtmlTag="false"
+    applyBodyTag="false"
+    docType="html-5.0"
+    cache="false">
+
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8"/>
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    />
+
+    <title>Blush Razorpay Checkout</title>
+
+    <!-- Official Razorpay Checkout library -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 32px 16px;
+            background: #f4f8f5;
+            color: #173b2d;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .container {
+            max-width: 520px;
+            margin: 40px auto;
+            padding: 28px;
+            background: #ffffff;
+            border-radius: 18px;
+            box-shadow: 0 8px 28px rgba(25, 65, 45, 0.12);
+        }
+
+        h1 {
+            margin-top: 0;
+            color: #176b45;
+        }
+
+        .description {
+            color: #52665b;
+            line-height: 1.6;
+        }
+
+        .button {
+            display: block;
+            width: 100%;
+            margin-top: 16px;
+            padding: 13px 18px;
+            border: 0;
+            border-radius: 10px;
+            background: #176b45;
+            color: #ffffff;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .button:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 8px;
+            overflow-wrap: anywhere;
+            white-space: pre-wrap;
+            line-height: 1.5;
+        }
+
+        .info {
+            background: #edf4ff;
+            color: #184b83;
+        }
+
+        .success {
+            background: #e9f8ef;
+            color: #176b45;
+        }
+
+        .error {
+            background: #ffeded;
+            color: #a11b1b;
+        }
+    </style>
+</head>
+
+<body>
+
+    <main class="container">
+
+        <h1>Blush Payment</h1>
+
+        <p class="description">
+            Complete your Blush Order payment securely through
+            Razorpay Test Mode. The amount is read from your
+            saved Salesforce Order.
+        </p>
+
+        <button
+            id="prepareButton"
+            class="button"
+            type="button"
+            onclick="preparePayment()">
+
+            Prepare Payment
+
+        </button>
+
+        <button
+            id="checkoutButton"
+            class="button"
+            type="button"
+            onclick="openCheckout()"
+            disabled="disabled">
+
+            Open Razorpay Checkout
+
+        </button>
+
+        <div
+            id="status"
+            class="status info"
+            role="status"
+            aria-live="polite">
+
+            Ready to prepare your test payment.
+
+        </div>
+
+    </main>
+
+
+    <script>
+        const orderId =
+            "{!JSENCODE($CurrentPage.parameters.orderId)}";
+
+        let paymentData = null;
+
+        let paymentInProgress = false;
+
+
+        // ============================================
+        // DISPLAY STATUS
+        // ============================================
+
+        function setStatus(message, type) {
+
+            const status =
+                document.getElementById('status');
+
+            status.className = 'status ' + type;
+
+            status.textContent =
+                message || 'Unknown error.';
+        }
+
+
+        // ============================================
+        // FORMAT REMOTING ERROR
+        // ============================================
+
+        function remotingErrorMessage(event) {
+
+            const lines = [];
+
+            if (event && event.message) {
+                lines.push(
+                    'Visualforce remoting error: ' +
+                    event.message
+                );
+            }
+
+            if (event && event.where) {
+                lines.push(
+                    'Apex stack trace:\n' +
+                    event.where
+                );
+            }
+
+            return lines.length
+                ? lines.join('\n')
+                : 'No remoting error details were returned.';
+        }
+
+
+        // ============================================
+        // PREPARE PAYMENT
+        // ============================================
+
+        function preparePayment() {
+
+            const prepareButton =
+                document.getElementById('prepareButton');
+
+            const checkoutButton =
+                document.getElementById('checkoutButton');
+
+
+            if (!orderId) {
+
+                setStatus(
+                    'No Salesforce Order ID was supplied in the page URL.',
+                    'error'
+                );
+
+                return;
+            }
+
+
+            if (
+                typeof Visualforce === 'undefined' ||
+                !Visualforce.remoting
+            ) {
+
+                setStatus(
+                    'Salesforce Visualforce remoting is unavailable on this page.',
+                    'error'
+                );
+
+                return;
+            }
+
+
+            if (typeof window.Razorpay !== 'function') {
+
+                setStatus(
+                    'Razorpay Checkout script is not available. ' +
+                    'Check the browser console, network request, ' +
+                    'and Salesforce Trusted URLs/CSP settings.',
+                    'error'
+                );
+
+                return;
+            }
+
+
+            prepareButton.disabled = true;
+            checkoutButton.disabled = true;
+
+            paymentData = null;
+
+            setStatus(
+                'Creating Razorpay order from the saved Blush Order...',
+                'info'
+            );
+
+
+            Visualforce.remoting.Manager.invokeAction(
+
+                '{!$RemoteAction.RazorpayCheckoutVFController.createOrder}',
+
+                orderId,
+
+                function(result, event) {
+
+                    prepareButton.disabled = false;
+
+
+                    // Remoting-level failure
+                    if (!event || !event.status) {
+
+                        console.error(
+                            'Razorpay createOrder remoting failure:',
+                            event
+                        );
+
+                        setStatus(
+                            remotingErrorMessage(event),
+                            'error'
+                        );
+
+                        return;
+                    }
+
+
+                    // Apex returned a handled failure
+                    if (!result || result.success !== true) {
+
+                        const message =
+                            result && result.message
+                                ? result.message
+                                : 'Apex returned no payment-order result.';
+
+                        console.error(
+                            'Razorpay createOrder returned failure:',
+                            result
+                        );
+
+                        setStatus(message, 'error');
+
+                        return;
+                    }
+
+
+                    paymentData = result.data;
+
+
+                    // Validate the response from Apex
+                    if (
+                        !paymentData ||
+                        !paymentData.keyId ||
+                        !paymentData.razorpayOrderId ||
+                        !paymentData.paymentTransactionId ||
+                        !Number.isFinite(
+                            Number(paymentData.amountPaise)
+                        ) ||
+                        Number(paymentData.amountPaise) <= 0
+                    ) {
+
+                        paymentData = null;
+
+                        setStatus(
+                            'The Apex payment-order response is incomplete or invalid.',
+                            'error'
+                        );
+
+                        return;
+                    }
+
+
+                    // Test Mode restriction
+                    if (
+                        !paymentData.keyId.startsWith('rzp_test_')
+                    ) {
+
+                        paymentData = null;
+
+                        setStatus(
+                            'This page accepts Razorpay Test Mode credentials only.',
+                            'error'
+                        );
+
+                        return;
+                    }
+
+
+                    checkoutButton.disabled = false;
+
+                    setStatus(
+                        'Payment order created successfully. ' +
+                        'Click Open Razorpay Checkout to continue.',
+                        'success'
+                    );
+
+                },
+
+                { escape: true }
+            );
+        }
+
+
+        // ============================================
+        // OPEN RAZORPAY CHECKOUT
+        // ============================================
+
+        function openCheckout() {
+
+            if (!paymentData || paymentInProgress) {
+                return;
+            }
+
+
+            if (typeof window.Razorpay !== 'function') {
+
+                setStatus(
+                    'Razorpay Checkout constructor is unavailable. ' +
+                    'Check CSP and the script request.',
+                    'error'
+                );
+
+                return;
+            }
+
+
+            paymentInProgress = true;
+
+            document.getElementById(
+                'checkoutButton'
+            ).disabled = true;
+
+
+            const options = {
+
+                key: paymentData.keyId,
+
+                amount: Number(paymentData.amountPaise),
+
+                currency: paymentData.currency,
+
+                name: 'Blush',
+
+                description: 'Payment for Blush Order',
+
+                order_id: paymentData.razorpayOrderId,
+
+                theme: {
+                    color: '#176b45'
+                },
+
+
+                handler: function(response) {
+
+                    verifyPayment(response);
+
+                },
+
+
+                modal: {
+
+                    ondismiss: function() {
+
+                        paymentInProgress = false;
+
+                        document.getElementById(
+                            'checkoutButton'
+                        ).disabled = false;
+
+                        setStatus(
+                            'Checkout was closed. Salesforce has not marked the Order Paid because of closing Checkout.',
+                            'info'
+                        );
+                    }
+
+                }
+            };
+
+
+            try {
+
+                const checkout =
+                    new window.Razorpay(options);
+
+
+                checkout.on(
+                    'payment.failed',
+                    function(event) {
+
+                        paymentInProgress = false;
+
+                        document.getElementById(
+                            'checkoutButton'
+                        ).disabled = false;
+
+                        const description =
+                            event &&
+                            event.error &&
+                            event.error.description
+                                ? event.error.description
+                                : 'The payment attempt failed.';
+
+                        setStatus(
+                            description +
+                            ' The Blush Order remains unpaid.',
+                            'error'
+                        );
+                    }
+                );
+
+
+                checkout.open();
+
+            } catch (error) {
+
+                paymentInProgress = false;
+
+                document.getElementById(
+                    'checkoutButton'
+                ).disabled = false;
+
+                console.error(
+                    'Unable to open Razorpay Checkout:',
+                    error
+                );
+
+                setStatus(
+                    error && error.message
+                        ? error.message
+                        : 'Unable to open Razorpay Checkout.',
+                    'error'
+                );
+            }
+        }
+
+
+        // ============================================
+        // VERIFY PAYMENT THROUGH SALESFORCE
+        // ============================================
+
+        function verifyPayment(response) {
+
+            if (
+                !response ||
+                !response.razorpay_payment_id ||
+                !response.razorpay_signature
+            ) {
+
+                paymentInProgress = false;
+
+                document.getElementById(
+                    'checkoutButton'
+                ).disabled = false;
+
+                setStatus(
+                    'Razorpay did not return the required verification details.',
+                    'error'
+                );
+
+                return;
+            }
+
+
+            setStatus(
+                'Verifying the payment signature and captured status with Salesforce...',
+                'info'
+            );
+
+
+            Visualforce.remoting.Manager.invokeAction(
+
+                '{!$RemoteAction.RazorpayCheckoutVFController.verifyPayment}',
+
+                orderId,
+
+                paymentData.paymentTransactionId,
+
+                response.razorpay_payment_id,
+
+                response.razorpay_signature,
+
+
+                function(result, event) {
+
+                    paymentInProgress = false;
+
+                    document.getElementById(
+                        'checkoutButton'
+                    ).disabled = false;
+
+
+                    if (!event || !event.status) {
+
+                        console.error(
+                            'Razorpay verification remoting failure:',
+                            event
+                        );
+
+                        setStatus(
+                            remotingErrorMessage(event),
+                            'error'
+                        );
+
+                        return;
+                    }
+
+
+                    if (!result || result.success !== true) {
+
+                        const message =
+                            result && result.message
+                                ? result.message
+                                : 'Payment verification failed.';
+
+                        console.error(
+                            'Razorpay verification returned failure:',
+                            result
+                        );
+
+                        setStatus(message, 'error');
+
+                        return;
+                    }
+
+
+                    const message =
+                        result.message ||
+                        'Payment verification completed.';
+
+                    const lowerMessage =
+                        message.toLowerCase();
+
+                    const isSuccess =
+                        lowerMessage.includes('successfully') ||
+                        lowerMessage.includes('already been verified');
+
+
+                    setStatus(
+                        message,
+                        isSuccess ? 'success' : 'error'
+                    );
+
+                },
+
+                { escape: true }
+            );
+        }
+
+    </script>
+
+</body>
+</html>
+</apex:page>

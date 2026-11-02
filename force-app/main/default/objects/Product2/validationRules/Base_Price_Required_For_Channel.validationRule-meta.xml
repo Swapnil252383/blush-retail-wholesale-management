@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Base_Price_Required_For_Channel</fullName>
+    <active>true</active>
+    <description>Price book entries need a price.</description>
+    <errorConditionFormula>AND(NOT(ISBLANK(Sales_Channel__c)), OR(ISBLANK(Base_Price__c), Base_Price__c &lt;= 0))</errorConditionFormula>
+    <errorDisplayField>Base_Price__c</errorDisplayField>
+    <errorMessage>Enter a Base Price greater than zero before assigning a Sales Channel.</errorMessage>
+</ValidationRule>

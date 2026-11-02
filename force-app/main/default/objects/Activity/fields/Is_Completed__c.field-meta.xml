@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Is_Completed__c</fullName>
+    <defaultValue>false</defaultValue>
+    <description>Events have no status; tick when the event is done so it does not trigger a reminder.</description>
+    <label>Completed</label>
+    <type>Checkbox</type>
+</CustomField>

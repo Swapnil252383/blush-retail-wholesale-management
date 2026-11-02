@@ -1,0 +1,201 @@
+<template>
+    <lightning-card
+        title="Dynamic SOQL Query Builder"
+        icon-name="standard:search">
+
+        <div class="slds-p-around_medium">
+
+            <!-- Select Object -->
+            <lightning-combobox
+                label="Select Object"
+                value={selectedObject}
+                options={objectOptions}
+                onchange={handleObjectChange}>
+            </lightning-combobox>
+
+            <!-- Select Fields -->
+            <lightning-dual-listbox
+                name="fields"
+                label="Select Fields"
+                source-label="Available Fields"
+                selected-label="Selected Fields"
+                options={fieldOptions}
+                value={selectedFields}
+                onchange={handleFieldsChange}
+                class="slds-m-top_medium">
+            </lightning-dual-listbox>
+
+            <!-- Record Limit -->
+            <lightning-combobox
+                label="Maximum Records"
+                value={recordLimit}
+                options={limitOptions}
+                onchange={handleLimitChange}
+                class="slds-m-top_medium">
+            </lightning-combobox>
+
+            <!-- Editable SOQL -->
+            <lightning-textarea
+                label="Generated SOQL Query (Editable)"
+                value={soql}
+                onchange={handleQueryChange}
+                class="slds-m-top_medium">
+            </lightning-textarea>
+
+            <!-- Save Query Section -->
+            <div class="slds-box slds-m-top_large">
+
+                <h2 class="slds-text-heading_small slds-m-bottom_medium">
+                    Save Query
+                </h2>
+
+                <lightning-input
+                    type="text"
+                    label="Query Name"
+                    placeholder="Enter a name, e.g. Account Query"
+                    value={queryName}
+                    onchange={handleQueryNameChange}
+                    maxlength="80">
+                </lightning-input>
+
+                <div class="slds-m-top_medium">
+                    <lightning-button
+                        label="Save Query"
+                        variant="brand"
+                        icon-name="utility:save"
+                        onclick={handleSaveQuery}
+                        disabled={isLoading}>
+                    </lightning-button>
+                </div>
+
+            </div>
+
+            <!-- Load Saved Query Section -->
+            <div class="slds-box slds-m-top_medium">
+
+                <h2 class="slds-text-heading_small slds-m-bottom_medium">
+                    Load Saved Query
+                </h2>
+
+                <lightning-combobox
+                    label="Saved Queries"
+                    placeholder="Select a saved query"
+                    value={selectedSavedQuery}
+                    options={savedQueryOptions}
+                    onchange={handleSavedQueryChange}>
+                </lightning-combobox>
+
+                <div class="slds-m-top_medium">
+                    <lightning-button
+                        label="Load Query"
+                        icon-name="utility:download"
+                        onclick={handleLoadSavedQuery}
+                        disabled={isLoading}>
+                    </lightning-button>
+                </div>
+
+            </div>
+
+            <!-- Execute Query -->
+            <div class="slds-m-top_large">
+                <lightning-button
+                    label="Execute Query"
+                    variant="brand"
+                    icon-name="utility:play"
+                    onclick={handleExecute}
+                    disabled={isLoading}>
+                </lightning-button>
+            </div>
+
+            <!-- Success Message -->
+            <template lwc:if={successMessage}>
+                <div
+                    class="slds-box slds-theme_success slds-m-top_medium"
+                    role="status">
+
+                    <lightning-icon
+                        icon-name="utility:success"
+                        size="small"
+                        alternative-text="Success">
+                    </lightning-icon>
+
+                    <span class="slds-m-left_small">
+                        {successMessage}
+                    </span>
+
+                </div>
+            </template>
+
+            <!-- Error Message -->
+            <template lwc:if={errorMessage}>
+                <div
+                    class="slds-box slds-theme_error slds-m-top_medium"
+                    role="alert">
+
+                    <lightning-icon
+                        icon-name="utility:error"
+                        size="small"
+                        variant="inverse"
+                        alternative-text="Error">
+                    </lightning-icon>
+
+                    <span class="slds-m-left_small">
+                        {errorMessage}
+                    </span>
+
+                </div>
+            </template>
+
+            <!-- Loading Spinner -->
+            <template lwc:if={isLoading}>
+                <lightning-spinner
+                    alternative-text="Processing query"
+                    size="medium">
+                </lightning-spinner>
+            </template>
+
+            <!-- Query Results -->
+            <template lwc:if={hasResults}>
+                <div class="slds-m-top_large">
+
+                    <h2 class="slds-text-heading_medium slds-m-bottom_small">
+                        Query Results ({resultCount})
+                    </h2>
+
+                    <!-- Display 10 records per page -->
+                    <lightning-datatable
+                        key-field="Id"
+                        data={paginatedRecords}
+                        columns={columns}
+                        hide-checkbox-column>
+                    </lightning-datatable>
+
+                    <!-- Pagination Controls -->
+                    <div class="slds-grid slds-grid_align-center
+                                slds-grid_vertical-align-center
+                                slds-m-top_medium">
+
+                        <lightning-button
+                            label="Previous"
+                            onclick={handlePrevious}
+                            disabled={isPreviousDisabled}>
+                        </lightning-button>
+
+                        <span class="slds-m-horizontal_medium">
+                            {pageInfo}
+                        </span>
+
+                        <lightning-button
+                            label="Next"
+                            onclick={handleNext}
+                            disabled={isNextDisabled}>
+                        </lightning-button>
+
+                    </div>
+
+                </div>
+            </template>
+
+        </div>
+    </lightning-card>
+</template>

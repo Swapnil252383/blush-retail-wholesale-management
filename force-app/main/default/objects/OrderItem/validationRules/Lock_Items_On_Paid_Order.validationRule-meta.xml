@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Lock_Items_On_Paid_Order</fullName>
+    <active>true</active>
+    <description>Requirement F.22.</description>
+    <errorConditionFormula>AND(ISPICKVAL(Order.Payment_Status__c, &quot;Paid&quot;), NOT($Permission.Edit_Paid_Orders))</errorConditionFormula>
+    <errorMessage>Products on a paid order can no longer be changed.</errorMessage>
+</ValidationRule>

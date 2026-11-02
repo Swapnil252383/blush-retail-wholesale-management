@@ -1,0 +1,364 @@
+<template>
+    <div class="workspace">
+        <section class="hero">
+            <div class="hero-copy">
+                <div class="eyebrow"><span class="eyebrow-dot"></span> RETAIL · WHOLESALE · SALES OPERATIONS</div>
+                <h1>Blush Control Center</h1>
+                <p>One workspace to manage products, customers, orders, GST, approvals, invoices and marketing — with live Salesforce validation messages.</p>
+                <div class="hero-actions">
+                    <lightning-button label="Open Reports" icon-name="utility:chart" onclick={navigateToReports}></lightning-button>
+                    <lightning-button label="Open Dashboards" icon-name="utility:dashboard" onclick={navigateToDashboards}></lightning-button>
+                    <lightning-button label="Approval Requests" icon-name="utility:approval" onclick={navigateToApprovalRequests}></lightning-button>
+                </div>
+            </div>
+            <div class="hero-art" aria-hidden="true">
+                <div class="art-ring ring-one"></div>
+                <div class="art-ring ring-two"></div>
+                <div class="art-card">
+                    <span class="art-label">BLUSH / SALES</span>
+                    <span class="art-number">01</span>
+                    <span class="art-caption">From first contact to final invoice.</span>
+                    <div class="art-line"></div>
+                    <div class="art-pills"><span>PRICE</span><span>GST</span><span>APPROVAL</span></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="metric-grid" aria-label="Workspace record counts">
+            <article class="metric metric-products"><div class="metric-icon"><lightning-icon icon-name="utility:product" size="small"></lightning-icon></div><div><div class="metric-label">Products</div><div class="metric-value">{productCount}</div><div class="metric-note">Live catalogue</div></div></article>
+            <article class="metric metric-leads"><div class="metric-icon"><lightning-icon icon-name="utility:groups" size="small"></lightning-icon></div><div><div class="metric-label">Leads</div><div class="metric-value">{leadCount}</div><div class="metric-note">Recent prospects</div></div></article>
+            <article class="metric metric-opps"><div class="metric-icon"><lightning-icon icon-name="utility:trending" size="small"></lightning-icon></div><div><div class="metric-label">Opportunities</div><div class="metric-value">{opportunityCount}</div><div class="metric-note">Sales in progress</div></div></article>
+            <article class="metric metric-orders"><div class="metric-icon"><lightning-icon icon-name="utility:orders" size="small"></lightning-icon></div><div><div class="metric-label">Orders</div><div class="metric-value">{orderCount}</div><div class="metric-note">Recent transactions</div></div></article>
+            <article class="metric metric-campaigns"><div class="metric-icon"><lightning-icon icon-name="utility:campaigns" size="small"></lightning-icon></div><div><div class="metric-label">Campaigns</div><div class="metric-value">{campaignCount}</div><div class="metric-note">Marketing activity</div></div></article>
+        </section>
+
+        <lightning-tabset active-tab-value={activeTab} variant="standard">
+            <lightning-tab label="Overview" value="overview" onactive={handleTabActive}>
+                <div class="section-heading"><div><div class="section-kicker">YOUR WORKSPACE</div><h2>Today's control panel</h2><p>Open a record, check the latest work, or jump directly to a Blush process.</p></div><lightning-button label="Refresh data" icon-name="utility:refresh" onclick={refreshLists}></lightning-button></div>
+                <div class="quick-grid">
+                    <button class="quick-card" onclick={navigateToCampaigns}><span class="quick-icon"><lightning-icon icon-name="utility:campaigns" size="medium"></lightning-icon></span><span class="quick-title">Campaign management</span><span class="quick-desc">Create promotions and review marketing activity.</span><span class="quick-link">Open Campaigns <lightning-icon icon-name="utility:arrowup" size="xx-small"></lightning-icon></span></button>
+                    <button class="quick-card" onclick={navigateToReports}><span class="quick-icon"><lightning-icon icon-name="utility:chart" size="medium"></lightning-icon></span><span class="quick-title">Sales reports</span><span class="quick-desc">Revenue, commissions, top products and GST reporting.</span><span class="quick-link">Explore reports <lightning-icon icon-name="utility:arrowup" size="xx-small"></lightning-icon></span></button>
+                    <button class="quick-card" onclick={navigateToDashboards}><span class="quick-icon"><lightning-icon icon-name="utility:dashboard" size="medium"></lightning-icon></span><span class="quick-title">Management dashboards</span><span class="quick-desc">Compare retail, wholesale and marketing performance.</span><span class="quick-link">View dashboards <lightning-icon icon-name="utility:arrowup" size="xx-small"></lightning-icon></span></button>
+                </div>
+                <div class="split-grid overview-lists">
+                    <section class="panel"><div class="panel-header"><div><h3>Recent orders</h3><p>Payment, discount approval and payable status.</p></div><span class="panel-mark">ORDERS</span></div><template lwc:if={orders.length}><lightning-datatable key-field="Id" data={orders} columns={orderColumns} onrowaction={handleOrderRowAction} hide-checkbox-column></lightning-datatable></template><template lwc:else><div class="empty-state"><lightning-icon icon-name="utility:orders" size="large"></lightning-icon><p>No visible orders yet. Create the first order in the Orders tab.</p></div></template></section>
+                    <section class="panel"><div class="panel-header"><div><h3>Recent opportunities</h3><p>Retail and wholesale deals linked to customers.</p></div><span class="panel-mark">SALES</span></div><template lwc:if={opportunities.length}><lightning-datatable key-field="Id" data={opportunities} columns={opportunityColumns} onrowaction={handleOpportunityRowAction} hide-checkbox-column></lightning-datatable></template><template lwc:else><div class="empty-state"><lightning-icon icon-name="utility:trending" size="large"></lightning-icon><p>No visible opportunities yet. Add a prospect in the Sales tab.</p></div></template></section>
+                </div>
+                <div class="note-strip"><lightning-icon icon-name="utility:info" size="small"></lightning-icon><div><strong>Business logic stays in Apex.</strong><span>Product price book sync, customer matching, copied order lines, GST, discount submission and paid-order protections are handled by the Blush project automation. This workspace gives you the input and output screens.</span></div></div>
+            </lightning-tab>
+
+            <lightning-tab label="Catalog &amp; Pricing" value="catalog" onactive={handleTabActive}>
+                <div class="section-heading"><div><div class="section-kicker">PRODUCT CATALOGUE</div><h2>Products and channel prices</h2><p>Create products here, then inspect the generated Standard, Retail and Wholesale price book entries.</p></div></div>
+                <div class="split-grid">
+                    <section class="panel form-panel"><div class="panel-header"><div><h3>Create product</h3><p>Retail uses Base Price; wholesale is 30% lower.</p></div><span class="panel-mark">01 / CATALOG</span></div>
+                        <lightning-record-edit-form object-api-name="Product2" onsuccess={handleProductSuccess} onerror={handleFormError}>
+                            <lightning-messages></lightning-messages>
+                            <div class="form-grid">
+                                <lightning-input-field field-name="Name" required></lightning-input-field>
+                                <lightning-input-field field-name="ProductCode"></lightning-input-field>
+                                <lightning-input-field field-name="IsActive" value={defaultProductActive}></lightning-input-field>
+                                <lightning-input-field field-name="Category__c" required></lightning-input-field>
+                                <lightning-input-field field-name="Sales_Channel__c" required></lightning-input-field>
+                                <lightning-input-field field-name="Base_Price__c" required></lightning-input-field>
+                            </div>
+                            <div class="form-footer"><span class="helper-text">Saving calls Product2Trigger and ProductPricebookService.</span><lightning-button type="submit" label="Save product" variant="brand" icon-name="utility:save"></lightning-button></div>
+                        </lightning-record-edit-form>
+                    </section>
+                    <section class="panel"><div class="panel-header"><div><h3>Price book preview</h3><p>Choose “View price book entries” from a product row.</p></div><span class="panel-mark">AUTO-SYNC</span></div>
+                        <template lwc:if={hasPricingProduct}>
+                            <div class="table-wrap"><table class="pricing-table"><thead><tr><th>Price book</th><th>List price</th><th>Entry</th><th>Book</th></tr></thead><tbody><template for:each={pricingRows} for:item="price"><tr key={price.pricebookName}><td>{price.pricebookName}</td><td><lightning-formatted-number value={price.listPrice} style="currency" currency-code="INR" maximum-fraction-digits="2"></lightning-formatted-number></td><td><span class="boolean-chip">{price.entryActive}</span></td><td>{price.pricebookActive}</td></tr></template></tbody></table></div>
+                            <div class="note-strip compact"><lightning-icon icon-name="utility:success" size="small"></lightning-icon><div><strong>Price synchronization output</strong><span>Removing a channel should deactivate its price book entry instead of deleting the audit history.</span></div></div>
+                        </template>
+                        <template lwc:else><div class="empty-state"><lightning-icon icon-name="utility:pricebook" size="large"></lightning-icon><p>Choose a product from the catalogue below to review its price book entries.</p></div></template>
+                    </section>
+                </div>
+                <section class="panel table-panel"><div class="panel-header"><div><h3>Product catalogue</h3><p>Most recently created or updated products first.</p></div><span class="panel-count">{productCount} loaded</span></div><template lwc:if={products.length}><lightning-datatable key-field="Id" data={products} columns={productColumns} onrowaction={handleProductRowAction} hide-checkbox-column></lightning-datatable></template><template lwc:else><div class="empty-state"><p>No products found. Create Silver Anklet and Party Dress to begin the demo.</p></div></template></section>
+            </lightning-tab>
+
+            <lightning-tab label="Accounts &amp; Contacts" value="accounts" onactive={handleTabActive}>
+                <div class="section-heading"><div><div class="section-kicker">CUSTOMER DIRECTORY</div><h2>Accounts and contacts</h2><p>Create Retail / Wholesale accounts directly, or use customer resolution from the Sales tab for the automatic Lead-to-customer journey.</p></div></div>
+                <div class="split-grid">
+                    <section class="panel form-panel"><div class="panel-header"><div><h3>Create account</h3><p>Choose the correct business channel for later opportunities and orders.</p></div><span class="panel-mark">01 / ACCOUNT</span></div>
+                        <div class="channel-switch"><lightning-combobox label="Account channel / record type" value={accountChannel} options={accountTypeOptions} onchange={handleAccountChannelChange}></lightning-combobox><span class="channel-chip">{accountChannel}</span></div>
+                        <template lwc:if={selectedAccountRecordTypeId}>
+                            <lightning-record-edit-form object-api-name="Account" record-type-id={selectedAccountRecordTypeId} onsuccess={handleAccountSuccess} onerror={handleFormError}>
+                                <lightning-messages></lightning-messages>
+                                <div class="form-grid">
+                                    <lightning-input-field field-name="Name" required></lightning-input-field>
+                                    <lightning-input-field field-name="Phone"></lightning-input-field>
+                                    <lightning-input-field field-name="BillingStreet"></lightning-input-field>
+                                    <lightning-input-field field-name="BillingCity"></lightning-input-field>
+                                    <lightning-input-field field-name="BillingState"></lightning-input-field>
+                                    <lightning-input-field field-name="BillingPostalCode"></lightning-input-field>
+                                    <lightning-input-field field-name="BillingCountry"></lightning-input-field>
+                                </div>
+                                <div class="form-footer"><span class="helper-text">Retail Accounts represent B2C customers; Wholesale Accounts represent B2B businesses.</span><lightning-button type="submit" label="Create account" variant="brand" icon-name="utility:add"></lightning-button></div>
+                            </lightning-record-edit-form>
+                        </template>
+                    </section>
+                    <section class="panel form-panel"><div class="panel-header"><div><h3>Create contact</h3><p>A person at a Retail customer or Wholesale business.</p></div><span class="panel-mark">02 / CONTACT</span></div>
+                        <lightning-record-edit-form object-api-name="Contact" onsuccess={handleContactSuccess} onerror={handleFormError}>
+                            <lightning-messages></lightning-messages>
+                            <div class="form-grid">
+                                <lightning-input-field field-name="FirstName"></lightning-input-field>
+                                <lightning-input-field field-name="LastName" required></lightning-input-field>
+                                <lightning-input-field field-name="AccountId"></lightning-input-field>
+                                <lightning-input-field field-name="Email"></lightning-input-field>
+                                <lightning-input-field field-name="Phone"></lightning-input-field>
+                                <lightning-input-field field-name="MobilePhone"></lightning-input-field>
+                            </div>
+                            <div class="form-footer"><span class="helper-text">If the Contact already exists, the Opportunity automation can reuse it to avoid duplicates.</span><lightning-button type="submit" label="Create contact" variant="brand" icon-name="utility:add"></lightning-button></div>
+                        </lightning-record-edit-form>
+                    </section>
+                </div>
+                <div class="split-grid">
+                    <section class="panel table-panel"><div class="panel-header"><div><h3>Recent accounts</h3><p>Check channel and billing state before an Order.</p></div><span class="panel-count">{accountCount} loaded</span></div><template lwc:if={accounts.length}><lightning-datatable key-field="Id" data={accounts} columns={accountColumns} onrowaction={handleAccountRowAction} hide-checkbox-column></lightning-datatable></template><template lwc:else><div class="empty-state"><p>No Accounts found.</p></div></template></section>
+                    <section class="panel table-panel"><div class="panel-header"><div><h3>Recent contacts</h3><p>People linked to customer Accounts.</p></div><span class="panel-count">{contactCount} loaded</span></div><template lwc:if={contacts.length}><lightning-datatable key-field="Id" data={contacts} columns={contactColumns} onrowaction={handleContactRowAction} hide-checkbox-column></lightning-datatable></template><template lwc:else><div class="empty-state"><p>No Contacts found.</p></div></template></section>
+                </div>
+            </lightning-tab>
+
+            <lightning-tab label="Sales &amp; Customers" value="sales" onactive={handleTabActive}>
+                <div class="section-heading"><div><div class="section-kicker">CUSTOMER LIFECYCLE</div><h2>Leads and opportunities</h2><p>Create a Lead first, then use the same email or phone on an Opportunity to test customer matching and conversion.</p></div></div>
+                <div class="split-grid">
+                    <section class="panel form-panel"><div class="panel-header"><div><h3>New lead</h3><p>Retail or wholesale prospect.</p></div><span class="panel-mark">01 / LEAD</span></div>
+                        <lightning-record-edit-form object-api-name="Lead" onsuccess={handleLeadSuccess} onerror={handleFormError}>
+                            <lightning-messages></lightning-messages>
+                            <div class="form-grid">
+                                <lightning-input-field field-name="FirstName"></lightning-input-field>
+                                <lightning-input-field field-name="LastName" required></lightning-input-field>
+                                <lightning-input-field field-name="Company" required></lightning-input-field>
+                                <lightning-input-field field-name="Status" required></lightning-input-field>
+                                <lightning-input-field field-name="Email"></lightning-input-field>
+                                <lightning-input-field field-name="Phone"></lightning-input-field>
+                                <lightning-input-field field-name="Customer_Type__c"></lightning-input-field>
+                            </div>
+                            <div class="form-footer"><span class="helper-text">Use a unique email for the new-customer demo.</span><lightning-button type="submit" label="Create lead" variant="brand" icon-name="utility:add"></lightning-button></div>
+                        </lightning-record-edit-form>
+                    </section>
+                    <section class="panel form-panel"><div class="panel-header"><div><h3>New opportunity</h3><p>Customer fields can resolve a Contact, convert a Lead or create a customer.</p></div><span class="panel-mark">02 / DEAL</span></div>
+                        <div class="channel-switch"><lightning-combobox label="Sales channel / record type" value={opportunityChannel} options={channelOptions} onchange={handleOpportunityChannelChange}></lightning-combobox><span class="channel-chip">{opportunityChannel}</span></div>
+                        <template lwc:if={selectedOpportunityRecordTypeId}>
+                            <lightning-record-edit-form object-api-name="Opportunity" record-type-id={selectedOpportunityRecordTypeId} onsuccess={handleOpportunitySuccess} onerror={handleFormError}>
+                                <lightning-messages></lightning-messages>
+                                <div class="form-grid">
+                                    <lightning-input-field field-name="Name" required></lightning-input-field>
+                                    <lightning-input-field field-name="StageName" required></lightning-input-field>
+                                    <lightning-input-field field-name="CloseDate" required></lightning-input-field>
+                                    <lightning-input-field field-name="AccountId"></lightning-input-field>
+                                    <lightning-input-field field-name="Customer_Name__c"></lightning-input-field>
+                                    <lightning-input-field field-name="Customer_Email__c"></lightning-input-field>
+                                    <lightning-input-field field-name="Customer_Phone__c"></lightning-input-field>
+                                    <template lwc:if={showWholesaleCompanyField}><lightning-input-field field-name="Company_Name__c"></lightning-input-field></template>
+                                </div>
+                                <div class="form-footer"><span class="helper-text">Leave Account blank to run customer resolution by email / phone.</span><lightning-button type="submit" label="Create opportunity" variant="brand" icon-name="utility:trending"></lightning-button></div>
+                            </lightning-record-edit-form>
+                        </template>
+                        <template lwc:else><div class="empty-state"><lightning-spinner alternative-text="Loading record types" size="small"></lightning-spinner><p>Loading Retail and Wholesale record types…</p></div></template>
+                    </section>
+                </div>
+                <div class="split-grid">
+                    <section class="panel table-panel"><div class="panel-header"><div><h3>Recent leads</h3><p>Converted status helps confirm the customer service ran.</p></div><span class="panel-count">{leadCount} loaded</span></div><template lwc:if={leads.length}><lightning-datatable key-field="Id" data={leads} columns={leadColumns} onrowaction={handleLeadRowAction} hide-checkbox-column></lightning-datatable></template><template lwc:else><div class="empty-state"><p>No leads found.</p></div></template></section>
+                    <section class="panel table-panel"><div class="panel-header"><div><h3>Recent opportunities</h3><p>Check assigned channel and customer details.</p></div><span class="panel-count">{opportunityCount} loaded</span></div><template lwc:if={opportunities.length}><lightning-datatable key-field="Id" data={opportunities} columns={opportunityColumns} onrowaction={handleOpportunityRowAction} hide-checkbox-column></lightning-datatable></template><template lwc:else><div class="empty-state"><p>No opportunities found.</p></div></template></section>
+                </div>
+                <section class="panel form-panel opportunity-products-panel"><div class="panel-header"><div><h3>Opportunity products</h3><p>Add products from the Opportunity's assigned price book. These lines are copied into an Order created from the Opportunity.</p></div><span class="panel-mark">03 / PRODUCTS</span></div>
+                    <lightning-combobox label="Working opportunity" value={selectedOpportunityId} options={opportunityPickerOptions} placeholder="Select an Opportunity" onchange={handleOpportunityPick}></lightning-combobox>
+                    <div class="form-grid slds-m-top_small">
+                        <lightning-combobox label="Product / price book entry" value={selectedOpportunityEntryId} options={opportunityProductChoices} placeholder="Select eligible product" onchange={handleOpportunityProductPick} disabled={isOpportunityNotSelected} required></lightning-combobox>
+                        <lightning-input data-id="opportunityQuantity" label="Quantity" type="number" min="1" step="1" value="1" required></lightning-input>
+                        <lightning-input class="wide-field" data-id="opportunityProductDescription" label="Description (optional)"></lightning-input>
+                    </div>
+                    <div class="form-footer"><span class="helper-text">Retail Opportunities use Blush Retail Price Book; Wholesale uses Blush Wholesale Price Book.</span><lightning-button label="Add opportunity product" variant="brand" icon-name="utility:add" onclick={handleAddOpportunityProduct} disabled={isOpportunityProductDisabled}></lightning-button></div>
+                    <div class="panel-header slds-m-top_medium"><div><h3>Opportunity line output</h3><p>Sales price and quantity saved on the selected Opportunity.</p></div><span class="panel-count">{opportunityLines.length} line(s)</span></div>
+                    <template lwc:if={opportunityLines.length}><lightning-datatable key-field="Id" data={opportunityLines} columns={opportunityLineColumns} hide-checkbox-column></lightning-datatable></template><template lwc:else><div class="empty-state"><p>Select an Opportunity and add a product to see the output here.</p></div></template>
+                </section>
+                <div class="note-strip"><lightning-icon icon-name="utility:info" size="small"></lightning-icon><div><strong>Customer resolution check</strong><span>For the demo, create a Lead with pooja.kale@example.com, then a Retail Opportunity with that same email and no Account. Verify that the Lead is converted and the right Account / Contact is linked.</span></div></div>
+            </lightning-tab>
+
+            <lightning-tab label="Orders, GST &amp; Invoices" value="orders" onactive={handleTabActive}>
+                <div class="section-heading"><div><div class="section-kicker">ORDER WORKBENCH</div><h2>Order processing and control</h2><p>Create an Order, add lines, inspect server-calculated GST, submit discounts, update payments and create the invoice.</p></div></div>
+                <div class="split-grid">
+                    <section class="panel form-panel"><div class="panel-header"><div><h3>Create order</h3><p>Link an Opportunity to copy its product lines automatically.</p></div><span class="panel-mark">01 / ORDER</span></div>
+                        <div class="channel-switch"><lightning-combobox label="Order channel / record type" value={orderChannel} options={channelOptions} onchange={handleOrderChannelChange}></lightning-combobox><span class="channel-chip">{orderChannel}</span></div>
+                        <template lwc:if={selectedOrderRecordTypeId}>
+                            <lightning-record-edit-form object-api-name="Order" record-type-id={selectedOrderRecordTypeId} onsuccess={handleOrderSuccess} onerror={handleFormError}>
+                                <lightning-messages></lightning-messages>
+                                <div class="form-grid">
+                                    <lightning-input-field field-name="AccountId"></lightning-input-field>
+                                    <lightning-input-field field-name="OpportunityId"></lightning-input-field>
+                                    <lightning-input-field field-name="EffectiveDate" required></lightning-input-field>
+                                    <lightning-input-field field-name="Status" required></lightning-input-field>
+                                    <lightning-input-field field-name="BillingStreet"></lightning-input-field>
+                                    <lightning-input-field field-name="BillingCity"></lightning-input-field>
+                                    <lightning-input-field field-name="BillingState"></lightning-input-field>
+                                    <lightning-input-field field-name="BillingPostalCode"></lightning-input-field>
+                                    <lightning-input-field field-name="BillingCountry"></lightning-input-field>
+                                </div>
+                                <div class="form-footer"><span class="helper-text">Account address, store, price book and tax type are derived by Apex where applicable.</span><lightning-button type="submit" label="Create order" variant="brand" icon-name="utility:orders"></lightning-button></div>
+                            </lightning-record-edit-form>
+                        </template>
+                        <template lwc:else><div class="empty-state"><lightning-spinner alternative-text="Loading record types" size="small"></lightning-spinner><p>Loading order record types…</p></div></template>
+                    </section>
+                    <section class="panel form-panel"><div class="panel-header"><div><h3>Add an order product</h3><p>The product list is restricted to the selected Order's price book.</p></div><span class="panel-mark">02 / LINE ITEM</span></div>
+                        <lightning-combobox label="Working order" value={selectedOrderId} options={orderPickerOptions} placeholder="Select an Order" onchange={handleOrderPick}></lightning-combobox>
+                        <lightning-combobox class="slds-m-top_small" label="Product / price book entry" value={selectedProductEntryId} options={availableProducts} placeholder="Select an eligible product" onchange={handleProductPick} disabled={isOrderNotSelected} required></lightning-combobox>
+                        <div class="form-grid slds-m-top_small">
+                            <lightning-input label="Quantity" type="number" min="1" step="1" value={quantity} onchange={handleQuantityChange} required></lightning-input>
+                            <lightning-input label="Discount per unit (₹)" type="number" min="0" step="0.01" value={discountPerUnit} onchange={handleDiscountChange}></lightning-input>
+                            <lightning-input class="wide-field" label="Line description (optional)" value={lineDescription} onchange={handleDescriptionChange}></lightning-input>
+                        </div>
+                        <div class="inline-summary"><span>Unit price</span><strong><template lwc:if={currentProductPrice}><lightning-formatted-number value={currentProductPrice} style="currency" currency-code="INR" maximum-fraction-digits="2"></lightning-formatted-number></template><template lwc:else>—</template></strong></div>
+                        <div class="form-footer"><span class="helper-text">Discounts above 10% trigger approval via the existing Apex service.</span><lightning-button label="Add product line" variant="brand" icon-name="utility:add" onclick={handleAddLine} disabled={isOrderNotSelected}></lightning-button></div>
+                        <template lwc:if={isAddingLine}><lightning-spinner alternative-text="Adding order product" size="small"></lightning-spinner></template>
+                    </section>
+                </div>
+
+                <template lwc:if={isOrderSelected}>
+                    <section class="order-summary-panel">
+                        <div class="order-summary-top"><div><div class="section-kicker">SELECTED TRANSACTION</div><h2>Order {orderSummary.OrderNumber}</h2><p>{orderAccountName} · {orderSummary.Sales_Channel__c} · {orderSummary.Tax_Type__c}</p></div><div class="status-pills"><span class="status-pill">{orderSummary.Status}</span><span class="status-pill">{orderSummary.Payment_Status__c}</span><span class="status-pill approval-pill">{orderSummary.Approval_Status__c}</span></div></div>
+                        <div class="total-grid">
+                            <div class="total-card"><span>Discount</span><strong><lightning-formatted-number value={orderSummary.Total_Discount__c} style="currency" currency-code="INR" maximum-fraction-digits="2"></lightning-formatted-number></strong></div>
+                            <div class="total-card"><span>Taxable amount</span><strong><lightning-formatted-number value={orderSummary.Effective_Order_Amount__c} style="currency" currency-code="INR" maximum-fraction-digits="2"></lightning-formatted-number></strong></div>
+                            <div class="total-card"><span>Total GST</span><strong><lightning-formatted-number value={orderSummary.Total_GST__c} style="currency" currency-code="INR" maximum-fraction-digits="2"></lightning-formatted-number></strong></div>
+                            <div class="total-card total-due"><span>Total payable</span><strong><lightning-formatted-number value={orderSummary.Net_Amount__c} style="currency" currency-code="INR" maximum-fraction-digits="2"></lightning-formatted-number></strong></div>
+                        </div>
+                        <div class="tax-split"><span>CGST <strong><lightning-formatted-number value={orderSummary.Total_CGST__c} style="currency" currency-code="INR" maximum-fraction-digits="2"></lightning-formatted-number></strong></span><span>SGST <strong><lightning-formatted-number value={orderSummary.Total_SGST__c} style="currency" currency-code="INR" maximum-fraction-digits="2"></lightning-formatted-number></strong></span><span>IGST <strong><lightning-formatted-number value={orderSummary.Total_IGST__c} style="currency" currency-code="INR" maximum-fraction-digits="2"></lightning-formatted-number></strong></span><span>Max line discount <strong>{orderSummary.Max_Discount_Percent__c}%</strong></span><span>Commission <strong><lightning-formatted-number value={orderSummary.Commission__c} style="currency" currency-code="INR" maximum-fraction-digits="2"></lightning-formatted-number></strong></span></div>
+                    </section>
+                    <section class="panel table-panel"><div class="panel-header"><div><h3>Order products and GST output</h3><p>Calculated fields are read-only here; the Apex trigger owns them.</p></div><span class="panel-count">{orderLines.length} line(s)</span></div><template lwc:if={orderLines.length}><lightning-datatable key-field="Id" data={orderLines} columns={lineColumns} onrowaction={handleLineRowAction} hide-checkbox-column></lightning-datatable></template><template lwc:else><div class="empty-state"><p>This order has no product lines yet. Add a product above, or link an Opportunity with products.</p></div></template></section>
+                    <template lwc:if={isLineEditVisible}>
+                        <section class="panel form-panel line-edit-panel"><div class="panel-header"><div><h3>Edit order product</h3><p>Update quantity or per-unit discount. Server-side tax and approval rules will run again.</p></div><span class="panel-mark">LINE EDIT</span></div>
+                            <div class="form-grid"><lightning-input label="Quantity" type="number" min="1" step="1" value={editLineQuantity} onchange={handleEditLineQuantityChange} required></lightning-input><lightning-input label="Discount per unit (₹)" type="number" min="0" step="0.01" value={editLineDiscount} onchange={handleEditLineDiscountChange}></lightning-input><lightning-input class="wide-field" label="Description" value={editLineDescription} onchange={handleEditLineDescriptionChange}></lightning-input></div>
+                            <div class="form-footer"><span class="helper-text">Discount cannot be negative or exceed the unit price.</span><div class="button-group"><lightning-button label="Cancel" onclick={handleCancelLineEdit}></lightning-button><lightning-button label="Save line" variant="brand" icon-name="utility:save" onclick={handleSaveLineEdit} disabled={isLineSaveDisabled}></lightning-button></div></div>
+                        </section>
+                    </template>
+                    <div class="split-grid action-grid">
+                        <section class="panel form-panel"><div class="panel-header"><div><h3>Payment and approval</h3><p>Try payment before approving a discount above 10% to see the validation message.</p></div><span class="panel-mark">03 / CONTROL</span></div>
+                            <div class="form-grid"><lightning-combobox label="Payment mode" value={paymentMode} options={paymentModeOptions} onchange={handlePaymentModeChange}></lightning-combobox><lightning-combobox label="Payment status" value={paymentStatus} options={paymentStatusOptions} onchange={handlePaymentStatusChange}></lightning-combobox></div>
+                            <div class="form-footer"><span class="helper-text">For online payment, use Razorpay. The Order is marked Paid only after server-side payment verification.</span><div class="button-group"><lightning-button label="Pay with Razorpay" variant="brand" icon-name="utility:moneybag" onclick={handlePayWithRazorpay} disabled={isRazorpayPayDisabled}></lightning-button><lightning-button label="Save payment" variant="neutral" icon-name="utility:save" onclick={handleSavePayment} disabled={isSavingPayment}></lightning-button></div></div>
+                            <div class="sub-action"><lightning-textarea label="Approval comments (optional)" value={approvalComments} onchange={handleApprovalCommentsChange} max-length="1000"></lightning-textarea><div class="form-footer"><span class="helper-text">Only available when a line discount exceeds 10%.</span><div class="button-group"><lightning-button label="Submit for approval" icon-name="utility:approval" onclick={handleSubmitApproval} disabled={isApprovalSubmitDisabled}></lightning-button><lightning-button label="Approve" variant="brand" data-action="Approve" onclick={handleApprovalAction} disabled={isApprovalActionDisabled}></lightning-button><lightning-button label="Reject" variant="destructive" data-action="Reject" onclick={handleApprovalAction} disabled={isApprovalActionDisabled}></lightning-button></div></div></div>
+                        </section>
+                        <section class="panel form-panel"><div class="panel-header"><div><h3>Billing address and tax type</h3><p>Change a Draft Order's billing state to recalculate CGST / SGST vs IGST.</p></div><span class="panel-mark">ADDRESS</span></div>
+                            <lightning-record-edit-form record-id={selectedOrderId} object-api-name="Order" onsuccess={handleOrderAddressSuccess} onerror={handleFormError}>
+                                <lightning-messages></lightning-messages>
+                                <div class="form-grid"><lightning-input-field field-name="BillingStreet"></lightning-input-field><lightning-input-field field-name="BillingCity"></lightning-input-field><lightning-input-field field-name="BillingState"></lightning-input-field><lightning-input-field field-name="BillingPostalCode"></lightning-input-field><lightning-input-field field-name="BillingCountry"></lightning-input-field></div>
+                                <div class="form-footer"><span class="helper-text">Use Draft records for address/tax testing. Paid-order security and validation may block edits.</span><lightning-button type="submit" label="Save billing address" variant="brand" icon-name="utility:save"></lightning-button></div>
+                            </lightning-record-edit-form>
+                        </section>
+                        <section class="panel form-panel"><div class="panel-header"><div><h3>Tax invoice</h3><p>Preview the Visualforce invoice or save a PDF in the Order's Files.</p></div><span class="panel-mark">04 / INVOICE</span></div>
+                            <div class="invoice-preview"><div class="invoice-stamp"><lightning-icon icon-name="utility:pdf_ext" size="large"></lightning-icon><span>PDF</span></div><div><strong>{orderSummary.Invoice_Number__c}</strong><p>Includes customer, store, product lines, discounts, GST breakup and amount payable.</p></div></div>
+                            <div class="form-footer"><span class="helper-text">Saving creates a Salesforce File linked to this Order.</span><div class="button-group"><lightning-button label="Preview PDF" icon-name="utility:preview" onclick={handlePreviewInvoice}></lightning-button><lightning-button label="Save PDF" variant="brand" icon-name="utility:save" onclick={handleSaveInvoice} disabled={isInvoiceActionDisabled}></lightning-button></div></div>
+                            <template lwc:if={isSavingInvoice}><lightning-spinner alternative-text="Saving invoice PDF" size="small"></lightning-spinner></template>
+                        </section>
+                    </div>
+                </template>
+                <template lwc:else><div class="note-strip"><lightning-icon icon-name="utility:info" size="small"></lightning-icon><div><strong>Select an order to manage it.</strong><span>Create a new Order on the left or choose one from the “Working order” dropdown. Its calculated totals, line items, payment controls and invoice actions will appear here.</span></div></div></template>
+                <section class="panel table-panel"><div class="panel-header"><div><h3>Recent orders</h3><p>Select “Manage this order” to load the complete order workbench.</p></div><span class="panel-count">{orderCount} loaded</span></div><template lwc:if={orders.length}><lightning-datatable key-field="Id" data={orders} columns={orderColumns} onrowaction={handleOrderRowAction} hide-checkbox-column></lightning-datatable></template><template lwc:else><div class="empty-state"><p>No orders found yet.</p></div></template></section>
+            </lightning-tab>
+
+            <lightning-tab label="Marketing &amp; Stores" value="marketing" onactive={handleTabActive}>
+                <div class="section-heading"><div><div class="section-kicker">MARKETING OPERATIONS</div><h2>Campaigns and store details</h2><p>Track campaign dates and keep store information available for invoice headers and order defaults.</p></div><lightning-button label="Open Campaigns" icon-name="utility:campaigns" onclick={navigateToCampaigns}></lightning-button></div>
+                <div class="split-grid">
+                    <section class="panel form-panel"><div class="panel-header"><div><h3>Create campaign</h3><p>Example: Navratri Special, October 2026.</p></div><span class="panel-mark">01 / CAMPAIGN</span></div>
+                        <lightning-record-edit-form object-api-name="Campaign" onsuccess={handleCampaignSuccess} onerror={handleFormError}>
+                            <lightning-messages></lightning-messages>
+                            <div class="form-grid">
+                                <lightning-input-field field-name="Name" required></lightning-input-field>
+                                <lightning-input-field field-name="Type"></lightning-input-field>
+                                <lightning-input-field field-name="Status" required></lightning-input-field>
+                                <lightning-input-field field-name="IsActive"></lightning-input-field>
+                                <lightning-input-field field-name="StartDate"></lightning-input-field>
+                                <lightning-input-field field-name="EndDate"></lightning-input-field>
+                                <lightning-input-field field-name="BudgetedCost"></lightning-input-field>
+                                <lightning-input-field field-name="ActualCost"></lightning-input-field>
+                            </div>
+                            <div class="form-footer"><span class="helper-text">Campaign reports refresh from these Salesforce records.</span><lightning-button type="submit" label="Save campaign" variant="brand" icon-name="utility:save"></lightning-button></div>
+                        </lightning-record-edit-form>
+                    </section>
+                    <section class="panel form-panel"><div class="panel-header"><div><h3>Create store</h3><p>Store address and GSTIN can appear on invoices.</p></div><span class="panel-mark">02 / STORE</span></div>
+                        <lightning-record-edit-form object-api-name="Store__c" onsuccess={handleStoreSuccess} onerror={handleFormError}>
+                            <lightning-messages></lightning-messages>
+                            <div class="form-grid">
+                                <lightning-input-field field-name="Name" required></lightning-input-field>
+                                <lightning-input-field field-name="Is_Default__c"></lightning-input-field>
+                                <lightning-input-field field-name="Street__c"></lightning-input-field>
+                                <lightning-input-field field-name="City__c"></lightning-input-field>
+                                <lightning-input-field field-name="State__c"></lightning-input-field>
+                                <lightning-input-field field-name="Postal_Code__c"></lightning-input-field>
+                                <lightning-input-field field-name="GSTIN__c"></lightning-input-field>
+                                <lightning-input-field field-name="Phone__c"></lightning-input-field>
+                                <lightning-input-field field-name="Website__c"></lightning-input-field>
+                            </div>
+                            <div class="form-footer"><span class="helper-text">Ensure only the intended store is marked Default.</span><lightning-button type="submit" label="Save store" variant="brand" icon-name="utility:save"></lightning-button></div>
+                        </lightning-record-edit-form>
+                    </section>
+                </div>
+                <section class="panel form-panel"><div class="panel-header"><div><h3>Add a Campaign Member</h3><p>Associate a Lead or Contact with a promotion to track marketing reach.</p></div><span class="panel-mark">03 / MEMBERS</span></div>
+                    <lightning-record-edit-form object-api-name="CampaignMember" onsuccess={handleCampaignMemberSuccess} onerror={handleFormError}>
+                        <lightning-messages></lightning-messages>
+                        <div class="form-grid"><lightning-input-field field-name="CampaignId" required></lightning-input-field><lightning-input-field field-name="Status" required></lightning-input-field><lightning-input-field field-name="LeadId"></lightning-input-field><lightning-input-field field-name="ContactId"></lightning-input-field></div>
+                        <div class="form-footer"><span class="helper-text">Select either a Lead or a Contact, not both.</span><lightning-button type="submit" label="Add campaign member" variant="brand" icon-name="utility:add"></lightning-button></div>
+                    </lightning-record-edit-form>
+                </section>
+                <section class="panel table-panel"><div class="panel-header"><div><h3>Recent campaigns</h3><p>Open a Campaign to see its members and activity.</p></div><span class="panel-count">{campaignCount} loaded</span></div><template lwc:if={campaigns.length}><lightning-datatable key-field="Id" data={campaigns} columns={campaignColumns} onrowaction={handleCampaignRowAction} hide-checkbox-column></lightning-datatable></template><template lwc:else><div class="empty-state"><p>No campaigns found.</p></div></template></section>
+                <section class="panel table-panel"><div class="panel-header"><div><h3>Recent campaign members</h3><p>Check which Leads or Contacts are associated with campaigns.</p></div><span class="panel-count">{campaignMembers.length} loaded</span></div><template lwc:if={campaignMembers.length}><lightning-datatable key-field="Id" data={campaignMembers} columns={campaignMemberColumns} onrowaction={handleCampaignMemberRowAction} hide-checkbox-column></lightning-datatable></template><template lwc:else><div class="empty-state"><p>No Campaign Members found yet.</p></div></template></section>
+                <section class="panel table-panel"><div class="panel-header"><div><h3>Stores</h3><p>Default store is used when an Order has no explicit store.</p></div><span class="panel-count">{stores.length} loaded</span></div><template lwc:if={stores.length}><lightning-datatable key-field="Id" data={stores} columns={storeColumns} hide-checkbox-column></lightning-datatable></template><template lwc:else><div class="empty-state"><p>No store records found.</p></div></template></section>
+            </lightning-tab>
+
+            <lightning-tab label="Automation &amp; Reports" value="automation" onactive={handleTabActive}>
+                <div class="section-heading"><div><div class="section-kicker">ADMIN &amp; ANALYTICS</div><h2>Automation health and business reporting</h2><p>Run the follow-up batch on demand, then inspect Tasks and dashboards. The nightly schedule remains managed by Apex.</p></div></div>
+                <div class="split-grid">
+                    <section class="panel automation-card"><div class="automation-icon"><lightning-icon icon-name="utility:task" size="large"></lightning-icon></div><h3>Opportunity follow-up reminders</h3><p>Checks open Opportunities for incomplete Tasks or Events dated in the last five days. It creates one high-priority reminder per Opportunity and prevents duplicates.</p><div class="automation-meta"><span>LOOKBACK</span><strong>5 days</strong><span>RECURRENCE</span><strong>Daily at 1 AM</strong></div><lightning-button label="Run batch now" variant="brand" icon-name="utility:refresh" onclick={handleRunBatch} disabled={isRunningBatch}></lightning-button><template lwc:if={isRunningBatch}><lightning-spinner alternative-text="Starting reminder batch" size="small"></lightning-spinner></template></section>
+                    <section class="panel automation-card"><div class="automation-icon"><lightning-icon icon-name="utility:approval" size="large"></lightning-icon></div><h3>Discount approval controls</h3><p>Any Order Product discount greater than 10% requires approval. Payment validation blocks Paid status while approval is pending or required.</p><div class="rule-list"><div><span class="rule-check">✓</span><span>10% or less — approval not required</span></div><div><span class="rule-check">✓</span><span>More than 10% — submit for approval</span></div><div><span class="rule-check">✓</span><span>Paid orders are locked for standard sales users</span></div></div><lightning-button label="Open approval requests" icon-name="utility:forward" onclick={navigateToApprovalRequests}></lightning-button></section>
+                </div>
+                <div class="split-grid activity-grid">
+                    <section class="panel form-panel"><div class="panel-header"><div><h3>Create follow-up Task</h3><p>Link an incomplete Task to an open Opportunity to test the reminder batch.</p></div><span class="panel-mark">ACTIVITY / TASK</span></div>
+                        <lightning-record-picker label="Related Opportunity" object-api-name="Opportunity" value={selectedActivityOpportunityId} onchange={handleActivityOpportunityPick} placeholder="Search open Opportunities"></lightning-record-picker>
+                        <lightning-record-edit-form object-api-name="Task" onsubmit={handleTaskSubmit} onerror={handleFormError}>
+                            <lightning-messages></lightning-messages>
+                            <div class="form-grid"><lightning-input-field field-name="Subject" required></lightning-input-field><lightning-input-field field-name="ActivityDate" required></lightning-input-field><lightning-input-field field-name="Status" required></lightning-input-field><lightning-input-field field-name="Priority" required></lightning-input-field><lightning-input-field class="wide-field" field-name="Description"></lightning-input-field></div>
+                            <div class="form-footer"><span class="helper-text">For reminder testing, choose an incomplete status and a due date within the last 5 days.</span><lightning-button type="submit" label="Create Task" variant="brand" icon-name="utility:add"></lightning-button></div>
+                        </lightning-record-edit-form>
+                    </section>
+                    <section class="panel form-panel"><div class="panel-header"><div><h3>Create follow-up Event</h3><p>Incomplete Events within the lookback window also qualify for reminders.</p></div><span class="panel-mark">ACTIVITY / EVENT</span></div>
+                        <lightning-record-picker label="Related Opportunity" object-api-name="Opportunity" value={selectedActivityOpportunityId} onchange={handleActivityOpportunityPick} placeholder="Search open Opportunities"></lightning-record-picker>
+                        <lightning-record-edit-form object-api-name="Event" onsubmit={handleEventSubmit} onerror={handleFormError}>
+                            <lightning-messages></lightning-messages>
+                            <div class="form-grid"><lightning-input-field field-name="Subject" required></lightning-input-field><lightning-input-field field-name="StartDateTime" required></lightning-input-field><lightning-input-field field-name="EndDateTime" required></lightning-input-field><lightning-input-field field-name="Is_Completed__c"></lightning-input-field><lightning-input-field class="wide-field" field-name="Description"></lightning-input-field></div>
+                            <div class="form-footer"><span class="helper-text">Set Completed to false and use a date in the previous 5 days for a qualifying activity.</span><lightning-button type="submit" label="Create Event" variant="brand" icon-name="utility:add"></lightning-button></div>
+                        </lightning-record-edit-form>
+                    </section>
+                </div>
+                <div class="split-grid">
+                    <section class="panel table-panel"><div class="panel-header"><div><h3>Recent Tasks</h3><p>Follow-up reminders are marked in the last column.</p></div><span class="panel-count">{tasks.length} loaded</span></div><template lwc:if={tasks.length}><lightning-datatable key-field="Id" data={tasks} columns={taskColumns} onrowaction={handleTaskRowAction} hide-checkbox-column></lightning-datatable></template><template lwc:else><div class="empty-state"><p>No Tasks found.</p></div></template></section>
+                    <section class="panel table-panel"><div class="panel-header"><div><h3>Recent Events</h3><p>Review scheduled customer interactions.</p></div><span class="panel-count">{events.length} loaded</span></div><template lwc:if={events.length}><lightning-datatable key-field="Id" data={events} columns={eventColumns} onrowaction={handleEventRowAction} hide-checkbox-column></lightning-datatable></template><template lwc:else><div class="empty-state"><p>No Events found.</p></div></template></section>
+                </div>
+                <div class="report-link-grid"><button class="report-link" onclick={navigateToReports}><lightning-icon icon-name="utility:chart" size="medium"></lightning-icon><span><strong>Blush Reports</strong><small>Revenue, GST, monthly sales, commission and top products.</small></span><lightning-icon icon-name="utility:chevronright" size="small"></lightning-icon></button><button class="report-link" onclick={navigateToDashboards}><lightning-icon icon-name="utility:dashboard" size="medium"></lightning-icon><span><strong>Blush Dashboards</strong><small>Retail performance, wholesale performance and marketing.</small></span><lightning-icon icon-name="utility:chevronright" size="small"></lightning-icon></button></div>
+                <div class="note-strip"><lightning-icon icon-name="utility:warning" size="small"></lightning-icon><div><strong>Access note</strong><span>Manual batch execution is limited in Apex to a System Administrator or a user with the project's Edit Paid Orders custom permission. Scheduled Apex continues to run independently of this button.</span></div></div>
+            </lightning-tab>
+        </lightning-tabset>
+        <footer class="workspace-footer"><span>BLUSH · SALESFORCE OPERATIONS</span><span>Customer first. Accurate pricing. Traceable approvals.</span></footer>
+
+        <!-- Floating Agentforce launcher: opens the native Salesforce chat panel. -->
+        <div class="agentforce-fab-shell">
+            <span class="agentforce-fab-tooltip" aria-hidden="true">
+                <span class="agentforce-tooltip-dot"></span>
+                Ask Blush Project Guide
+            </span>
+            <button
+                class="agentforce-fab"
+                type="button"
+                title="Open Blush Project Guide"
+                aria-label="Open Blush Project Guide chatbot"
+                aria-busy={isOpeningAgentforce}
+                onclick={handleOpenAgentforce}
+                disabled={isOpeningAgentforce}>
+                <lightning-icon
+                    icon-name="utility:chat"
+                    size="medium"
+                    variant="inverse"
+                    alternative-text="Chat with Blush Project Guide">
+                </lightning-icon>
+                <span class="agentforce-fab-spark" aria-hidden="true">✦</span>
+            </button>
+        </div>
+    </div>
+</template>

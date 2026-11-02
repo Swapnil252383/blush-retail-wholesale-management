@@ -1,0 +1,17 @@
+<template>
+    <lightning-card title="Blush Razorpay Payment" icon-name="utility:payment_gateway">
+        <div class="slds-p-around_medium">
+            <p class="slds-m-bottom_medium">
+                Open Razorpay Checkout to pay your saved Blush Order
+                through the Test Mode payment gateway.
+            </p>
+
+            <lightning-button
+                label="Pay with Razorpay"
+                variant="brand"
+                icon-name="utility:currency"
+                onclick={handlePay}>
+            </lightning-button>
+        </div>
+    </lightning-card>
+</template>

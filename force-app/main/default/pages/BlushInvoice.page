@@ -1,0 +1,116 @@
+<apex:page standardController="Order" extensions="InvoiceController" renderAs="pdf" applyHtmlTag="false" applyBodyTag="false" showHeader="false" sidebar="false" standardStylesheets="false">
+<html>
+<head>
+    <style type="text/css">
+        @page { size: A4; margin: 18mm 14mm; }
+        body { font-family: Arial, Helvetica, sans-serif; font-size: 10pt; color: #222; }
+        .brand { font-size: 22pt; font-weight: bold; color: #C2185B; letter-spacing: 1px; }
+        .muted { color: #555; }
+        .title { font-size: 14pt; font-weight: bold; margin: 14px 0 8px 0; border-bottom: 2px solid #C2185B; padding-bottom: 4px; }
+        table { width: 100%; border-collapse: collapse; }
+        .meta td { padding: 2px 0; vertical-align: top; }
+        .lines th { background: #F8E1EA; border: 1px solid #C9A3B3; padding: 5px 4px; font-size: 9pt; text-align: left; }
+        .lines td { border: 1px solid #DDD; padding: 5px 4px; font-size: 9pt; }
+        .num { text-align: right; }
+        .totals td { padding: 3px 4px; }
+        .grand td { font-weight: bold; font-size: 11pt; border-top: 2px solid #222; }
+        .notes { margin-top: 24px; font-size: 8.5pt; color: #444; }
+    </style>
+</head>
+<body>
+    <table class="meta">
+        <tr>
+            <td style="width:30%"><div class="brand">BLUSH</div></td>
+            <td>
+                <strong>{!store.Name}</strong><br/>
+                <apex:outputText value="{!store.Street__c}" rendered="{!NOT(ISBLANK(store.Street__c))}"/><br/>
+                {!store.City__c}<apex:outputText value=", " rendered="{!NOT(ISBLANK(store.State__c))}"/>{!store.State__c} {!store.Postal_Code__c}<br/>
+                GST: {!store.GSTIN__c}<br/>
+                Phone: {!store.Phone__c}<br/>
+                Website: {!store.Website__c}
+            </td>
+        </tr>
+    </table>
+
+    <div class="title">Tax Invoice</div>
+
+    <table class="meta">
+        <tr>
+            <td style="width:55%">
+                <span class="muted">To:</span> <strong>{!order.Customer_Name__c}</strong><br/>
+                <span class="muted">Phone:</span> {!order.Account.Phone}<br/>
+                <span class="muted">Billing address:</span>
+                {!order.BillingStreet} {!order.BillingCity} {!order.BillingState} {!order.BillingPostalCode} {!order.BillingCountry}
+            </td>
+            <td>
+                <span class="muted">Invoice No.:</span> <strong>{!order.Invoice_Number__c}</strong><br/>
+                <span class="muted">Invoice Date:</span>&nbsp;
+                <apex:outputText value="{0,date,dd-MMM-yyyy}"><apex:param value="{!order.EffectiveDate}"/></apex:outputText><br/>
+                <span class="muted">Payment Mode:</span> {!order.Payment_Mode__c}<br/>
+                <span class="muted">Customer Type:</span> {!order.Sales_Channel__c}
+            </td>
+        </tr>
+    </table>
+
+    <br/>
+    <table class="lines">
+        <tr>
+            <th>Sr. No.</th>
+            <th>Product Code</th>
+            <th>Item Description</th>
+            <th class="num">Qty</th>
+            <th class="num">Unit Price</th>
+            <th class="num">Discount</th>
+            <th class="num">GST %</th>
+            <apex:outputPanel layout="none" rendered="{!isIntraState}">
+                <th class="num">CGST</th>
+                <th class="num">SGST</th>
+            </apex:outputPanel>
+            <apex:outputPanel layout="none" rendered="{!NOT(isIntraState)}">
+                <th class="num">IGST</th>
+            </apex:outputPanel>
+            <th class="num">Net Price</th>
+        </tr>
+        <apex:variable var="rowNumber" value="{!0}"/>
+        <apex:repeat value="{!items}" var="item">
+            <apex:variable var="rowNumber" value="{!rowNumber + 1}"/>
+            <tr>
+                <td>{!rowNumber}</td>
+                <td>{!item.Product_Code__c}</td>
+                <td>{!item.Product_Name__c}<apex:outputText value=" - {!item.Description}" rendered="{!NOT(ISBLANK(item.Description))}"/></td>
+                <td class="num"><apex:outputText value="{0,number,0.##}"><apex:param value="{!item.Quantity}"/></apex:outputText></td>
+                <td class="num"><apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!item.UnitPrice}"/></apex:outputText></td>
+                <td class="num"><apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!BLANKVALUE(item.Discount__c, 0)}"/></apex:outputText></td>
+                <td class="num"><apex:outputText value="{0,number,0.##}%"><apex:param value="{!item.GST_Rate__c}"/></apex:outputText></td>
+                <apex:outputPanel layout="none" rendered="{!isIntraState}">
+                    <td class="num"><apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!item.CGST__c}"/></apex:outputText></td>
+                    <td class="num"><apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!item.SGST__c}"/></apex:outputText></td>
+                </apex:outputPanel>
+                <apex:outputPanel layout="none" rendered="{!NOT(isIntraState)}">
+                    <td class="num"><apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!item.IGST__c}"/></apex:outputText></td>
+                </apex:outputPanel>
+                <td class="num"><apex:outputText value="{0,number,#,##0.00}"><apex:param value="{!item.Net_Price__c}"/></apex:outputText></td>
+            </tr>
+        </apex:repeat>
+    </table>
+
+    <table class="totals" style="width:45%; margin-left:55%; margin-top:10px;">
+        <tr><td>Total Discount</td><td class="num"><apex:outputText value="Rs. {0,number,#,##0.00}"><apex:param value="{!order.Total_Discount__c}"/></apex:outputText></td></tr>
+        <tr><td>Taxable Amount</td><td class="num"><apex:outputText value="Rs. {0,number,#,##0.00}"><apex:param value="{!order.Effective_Order_Amount__c}"/></apex:outputText></td></tr>
+        <apex:outputPanel layout="none" rendered="{!isIntraState}">
+            <tr><td>CGST</td><td class="num"><apex:outputText value="Rs. {0,number,#,##0.00}"><apex:param value="{!order.Total_CGST__c}"/></apex:outputText></td></tr>
+            <tr><td>SGST</td><td class="num"><apex:outputText value="Rs. {0,number,#,##0.00}"><apex:param value="{!order.Total_SGST__c}"/></apex:outputText></td></tr>
+        </apex:outputPanel>
+        <apex:outputPanel layout="none" rendered="{!NOT(isIntraState)}">
+            <tr><td>IGST</td><td class="num"><apex:outputText value="Rs. {0,number,#,##0.00}"><apex:param value="{!order.Total_IGST__c}"/></apex:outputText></td></tr>
+        </apex:outputPanel>
+        <tr class="grand"><td>Total Amount Payable</td><td class="num"><apex:outputText value="Rs. {0,number,#,##0.00}"><apex:param value="{!order.Net_Amount__c}"/></apex:outputText></td></tr>
+    </table>
+
+    <div class="notes">
+        ** All goods sold will not be taken back.<br/>
+        ** For exchange, please carry the original bill. Exchange will be done only within 15 days of the purchase date.
+    </div>
+</body>
+</html>
+</apex:page>

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Report xmlns="http://soap.sforce.com/2006/04/metadata">
+    <columns>
+        <field>Order$OrderNumber</field>
+    </columns>
+    <columns>
+        <field>Order$Customer_Name__c</field>
+    </columns>
+    <columns>
+        <field>Order$Sales_Channel__c</field>
+    </columns>
+    <columns>
+        <field>Order$Status</field>
+    </columns>
+    <columns>
+        <field>Order$Payment_Status__c</field>
+    </columns>
+    <columns>
+        <field>Order$Sales_Rep_Name__c</field>
+    </columns>
+    <columns>
+        <aggregateTypes>Sum</aggregateTypes>
+        <field>Order$Effective_Order_Amount__c</field>
+    </columns>
+    <columns>
+        <aggregateTypes>Sum</aggregateTypes>
+        <field>Order$Total_GST__c</field>
+    </columns>
+    <columns>
+        <aggregateTypes>Sum</aggregateTypes>
+        <field>Order$Net_Amount__c</field>
+    </columns>
+    <description>All orders by month.</description>
+    <format>Summary</format>
+    <groupingsDown>
+        <dateGranularity>Month</dateGranularity>
+        <field>Order$EffectiveDate</field>
+        <sortOrder>Desc</sortOrder>
+    </groupingsDown>
+    <name>Monthly Order Report</name>
+    <params>
+        <name>co</name>
+        <value>1</value>
+    </params>
+    <reportType>Blush_Orders__c</reportType>
+    <scope>organization</scope>
+    <showDetails>true</showDetails>
+    <showGrandTotal>true</showGrandTotal>
+    <showSubTotals>true</showSubTotals>
+    <timeFrameFilter>
+        <dateColumn>Order$EffectiveDate</dateColumn>
+        <interval>INTERVAL_CURY</interval>
+    </timeFrameFilter>
+</Report>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Commission__c</fullName>
+    <formula>IF(Effective_Order_Amount__c &lt;= 1000, ROUND(Effective_Order_Amount__c * 0.01, 2), 30)</formula>
+    <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+    <inlineHelpText>1% of the effective order amount up to Rs. 1,000; flat Rs. 30 above that.</inlineHelpText>
+    <label>Commission</label>
+    <precision>18</precision>
+    <required>false</required>
+    <scale>2</scale>
+    <trackHistory>false</trackHistory>
+    <type>Currency</type>
+</CustomField>

@@ -1,0 +1,61 @@
+<template>
+    <lightning-card title="DummyJSON Supplier Search" icon-name="standard:product">
+        <div class="slds-p-around_medium">
+            <div class="slds-grid slds-wrap slds-gutters">
+                <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-2">
+                    <lightning-input
+                        label="Search sample products"
+                        value={searchTerm}
+                        onchange={handleSearchTermChange}
+                        onkeydown={handleKeyDown}
+                        placeholder="Try jewellery, dress, shirt, or phone">
+                    </lightning-input>
+                </div>
+                <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-3">
+                    <lightning-combobox
+                        label="Sample category (used when search is blank)"
+                        value={selectedCategory}
+                        options={categoryOptions}
+                        onchange={handleCategoryChange}>
+                    </lightning-combobox>
+                </div>
+                <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-6 slds-m-top_large">
+                    <lightning-button label="Search" variant="brand" onclick={handleSearch}></lightning-button>
+                </div>
+            </div>
+
+            <template if:true={isLoading}>
+                <lightning-spinner alternative-text="Loading sample products" size="medium"></lightning-spinner>
+            </template>
+
+            <template if:true={errorMessage}>
+                <div class="slds-text-color_error slds-m-top_medium" role="alert">{errorMessage}</div>
+            </template>
+
+            <template if:true={hasResults}>
+                <p class="slds-m-vertical_small">Select up to 10 rows, then choose Import Selected. Values from DummyJSON are demonstration data, not supplier quotes.</p>
+                <lightning-datatable
+                    key-field="id"
+                    data={products}
+                    columns={columns}
+                    selected-rows={selectedIds}
+                    max-row-selection="10"
+                    onrowselection={handleRowSelection}>
+                </lightning-datatable>
+            </template>
+
+            <template if:true={showNoResults}>
+                <p class="slds-m-top_medium">No products were returned. Try another search term or category.</p>
+            </template>
+
+            <div class="slds-m-top_medium">
+                <lightning-button
+                    label="Import Selected"
+                    variant="brand"
+                    onclick={handleImport}
+                    disabled={disableImport}>
+                </lightning-button>
+            </div>
+        </div>
+    </lightning-card>
+</template>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Lock_Paid_Orders</fullName>
+    <active>true</active>
+    <description>Requirement F.22: paid orders are read-only for sales reps.</description>
+    <errorConditionFormula>AND(NOT(ISNEW()), ISPICKVAL(PRIORVALUE(Payment_Status__c), &quot;Paid&quot;), NOT($Permission.Edit_Paid_Orders))</errorConditionFormula>
+    <errorMessage>This order has been paid and can no longer be edited.</errorMessage>
+</ValidationRule>

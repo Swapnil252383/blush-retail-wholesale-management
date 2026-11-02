@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Discount_Within_Unit_Price</fullName>
+    <active>true</active>
+    <description>Sanity check on per-unit discount.</description>
+    <errorConditionFormula>OR(Discount__c &lt; 0, Discount__c &gt; UnitPrice)</errorConditionFormula>
+    <errorDisplayField>Discount__c</errorDisplayField>
+    <errorMessage>Discount must be between 0 and the unit price.</errorMessage>
+</ValidationRule>

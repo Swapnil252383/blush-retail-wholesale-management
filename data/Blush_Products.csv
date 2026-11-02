@@ -1,0 +1,13 @@
+ProductCode,Name,Category__c,Sales_Channel__c,Base_Price__c,IsActive
+10#001,Jeans,Garments,Retail;Wholesale,500,true
+10#002,Gown,Garments,Retail,1500,true
+10#003,Cotton Kurti,Garments,Retail;Wholesale,650,true
+10#004,Printed T-Shirt,Garments,Retail;Wholesale,350,true
+10#005,Silk Saree,Garments,Retail,2800,true
+10#006,Designer Lehenga,Garments,Retail,4500,true
+10#007,Palazzo Pants,Garments,Wholesale,450,true
+20#001,Kundan Necklace Set,Jewellery,Retail;Wholesale,1200,true
+20#002,Oxidised Jhumka Earrings,Jewellery,Retail;Wholesale,299,true
+20#003,Glass Bangles (Set of 12),Jewellery,Wholesale,180,true
+20#004,American Diamond Ring,Jewellery,Retail,799,true
+20#005,Pearl Maang Tikka,Jewellery,Retail;Wholesale,450,true

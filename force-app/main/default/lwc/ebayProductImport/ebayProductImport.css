@@ -1,0 +1,228 @@
+/* Main product card */
+
+.product-card {
+    height: 100%;
+    overflow: hidden;
+    border: 1px solid #dedede;
+    border-radius: 8px;
+    background: #ffffff;
+    transition: box-shadow 0.2s ease;
+}
+
+.product-card:hover {
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
+}
+
+
+/* Search button */
+
+.search-button {
+    display: flex;
+    align-items: flex-end;
+    padding-top: 1.5rem;
+    padding-bottom: 0.1rem;
+}
+
+
+/* Loading spinner section */
+
+.spinner-container {
+    position: relative;
+    min-height: 70px;
+    margin-top: 1rem;
+}
+
+
+/* Search results heading */
+
+.results-heading {
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+
+/* Image container */
+
+.image-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 100%;
+    height: 200px;
+
+    margin-bottom: 12px;
+
+    overflow: hidden;
+    border-radius: 6px;
+
+    background: #f7f7f7;
+}
+
+
+/* Actual eBay image */
+
+.product-image {
+    display: block;
+
+    width: 100%;
+    height: 200px;
+
+    object-fit: contain;
+
+    background: #f7f7f7;
+}
+
+
+/* Fallback shown when the image URL fails */
+
+.image-fallback {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    gap: 10px;
+
+    width: 100%;
+    height: 200px;
+
+    padding: 1rem;
+
+    color: #706e6b;
+    background: #f7f7f7;
+
+    font-size: 0.875rem;
+    text-align: center;
+}
+
+
+/* Product title */
+
+.product-title {
+    margin-top: 0.5rem;
+    margin-bottom: 0.75rem;
+
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.4;
+
+    overflow-wrap: anywhere;
+}
+
+
+/* Supplier information */
+
+.supplier-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+
+    margin-bottom: 0.75rem;
+
+    font-size: 0.875rem;
+    color: #444444;
+}
+
+.supplier-details p {
+    overflow-wrap: anywhere;
+}
+
+.supplier-details strong {
+    margin-right: 0.25rem;
+}
+
+
+/* Original listing link */
+
+.listing-link {
+    margin-top: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.listing-link a {
+    color: #0176d3;
+    text-decoration: none;
+}
+
+.listing-link a:hover {
+    text-decoration: underline;
+}
+
+
+/* Divider before the Blush fields */
+
+.section-divider {
+    height: 1px;
+    width: 100%;
+
+    margin-top: 0.75rem;
+    margin-bottom: 1rem;
+
+    background: #e5e5e5;
+}
+
+
+/* Import button section */
+
+.import-button-container {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+
+    gap: 0.75rem;
+
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+
+/* Success message */
+
+.import-success {
+    display: flex;
+    align-items: flex-start;
+
+    gap: 0.5rem;
+
+    margin-top: 0.75rem;
+    padding: 0.75rem;
+
+    border-radius: 6px;
+
+    background: #f0f9f2;
+    color: #216e39;
+
+    font-size: 0.8125rem;
+    overflow-wrap: anywhere;
+}
+
+
+/* Error message */
+
+.error-message {
+    margin-top: 1rem;
+    padding: 0.75rem;
+
+    border-radius: 6px;
+
+    background: #fff1f0;
+    color: #ba0517;
+
+    overflow-wrap: anywhere;
+}
+
+
+/* Empty search state */
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    padding: 2rem 1rem;
+
+    color: #706e6b;
+    text-align: center;
+}

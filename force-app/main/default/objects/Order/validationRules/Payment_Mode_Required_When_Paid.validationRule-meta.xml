@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Payment_Mode_Required_When_Paid</fullName>
+    <active>true</active>
+    <description>Payment mode is printed on the invoice.</description>
+    <errorConditionFormula>AND(ISPICKVAL(Payment_Status__c, &quot;Paid&quot;), ISBLANK(TEXT(Payment_Mode__c)))</errorConditionFormula>
+    <errorDisplayField>Payment_Mode__c</errorDisplayField>
+    <errorMessage>Select a Payment Mode before marking the order as Paid.</errorMessage>
+</ValidationRule>

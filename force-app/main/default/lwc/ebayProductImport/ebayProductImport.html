@@ -1,0 +1,270 @@
+<template>
+    <lightning-card
+        title="eBay Product Import"
+        icon-name="standard:product">
+
+        <div class="slds-p-around_medium">
+
+            <!-- Search section -->
+            <div class="slds-grid slds-gutters slds-wrap">
+
+                <div
+                    class="slds-col slds-size_1-of-1
+                           slds-large-size_9-of-12">
+
+                    <lightning-input
+                        label="Search eBay products"
+                        placeholder="Example: artificial necklace"
+                        value={searchTerm}
+                        onchange={handleSearchTermChange}
+                        onkeyup={handleKeyUp}>
+                    </lightning-input>
+
+                </div>
+
+                <div
+                    class="slds-col slds-size_1-of-1
+                           slds-large-size_3-of-12 search-button">
+
+                    <lightning-button
+                        label="Search eBay"
+                        variant="brand"
+                        onclick={handleSearch}
+                        disabled={isSearching}>
+                    </lightning-button>
+
+                </div>
+
+            </div>
+
+            <!-- Loading spinner -->
+            <template if:true={isSearching}>
+                <div class="spinner-container">
+                    <lightning-spinner
+                        alternative-text="Searching eBay listings"
+                        size="medium">
+                    </lightning-spinner>
+                </div>
+            </template>
+
+            <!-- Search error -->
+            <template if:true={errorMessage}>
+                <div
+                    class="error-message"
+                    role="alert">
+                    {errorMessage}
+                </div>
+            </template>
+
+            <!-- No results -->
+            <template if:true={showNoResults}>
+                <div class="empty-state">
+                    <lightning-icon
+                        icon-name="utility:search"
+                        alternative-text="No results"
+                        size="large">
+                    </lightning-icon>
+
+                    <p class="slds-m-top_small">
+                        No listings found. Try another search term.
+                    </p>
+                </div>
+            </template>
+
+            <!-- Search results -->
+            <template if:true={hasResults}>
+
+                <div class="results-heading">
+                    <h2 class="slds-text-heading_medium">
+                        Search Results
+                    </h2>
+
+                    <p class="slds-text-color_weak">
+                        Review the supplier listing and enter
+                        the selling details for Blush.
+                    </p>
+
+                </div>
+
+                <div class="slds-grid slds-wrap slds-gutters">
+
+                    <template
+                        for:each={listings}
+                        for:item="item">
+
+                        <div
+                            key={item.itemId}
+                            class="slds-col slds-size_1-of-1
+                                   slds-large-size_1-of-2
+                                   slds-p-bottom_medium">
+
+                            <article class="slds-box product-card">
+
+                                <!-- Product image with error fallback -->
+                                <div class="image-container">
+
+                                    <template if:true={item.showImage}>
+
+                                        <img
+                                            src={item.imageUrl}
+                                            alt={item.title}
+                                            class="product-image"
+                                            data-id={item.itemId}
+                                            onerror={handleImageError}/>
+
+                                    </template>
+
+                                    <template if:false={item.showImage}>
+
+                                        <div class="image-fallback">
+
+                                            <lightning-icon
+                                                icon-name="utility:image"
+                                                alternative-text="Image unavailable"
+                                                size="large">
+                                            </lightning-icon>
+
+                                            <span>
+                                                Product image unavailable
+                                            </span>
+
+                                        </div>
+
+                                    </template>
+
+                                </div>
+
+                                <!-- Product title -->
+                                <h3 class="product-title">
+                                    {item.title}
+                                </h3>
+
+                                <!-- Supplier information -->
+                                <div class="supplier-details">
+
+                                    <p>
+                                        <strong>Supplier price:</strong>
+                                        <span>{item.displayPrice}</span>
+                                    </p>
+
+                                    <template if:true={item.condition}>
+                                        <p>
+                                            <strong>Condition:</strong>
+                                            <span>{item.condition}</span>
+                                        </p>
+                                    </template>
+
+                                </div>
+
+                                <!-- Original eBay listing -->
+                                <template if:true={item.itemUrl}>
+
+                                    <div class="listing-link">
+                                        <a
+                                            href={item.itemUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer">
+                                            View original eBay listing
+                                        </a>
+                                    </div>
+
+                                </template>
+
+                                <div class="section-divider"></div>
+
+                                <!-- Blush category -->
+                                <lightning-combobox
+                                    label="Blush product category"
+                                    value={item.category}
+                                    options={categoryOptions}
+                                    data-id={item.itemId}
+                                    data-field="category"
+                                    required
+                                    disabled={item.isSaving}
+                                    onchange={handleFieldChange}>
+                                </lightning-combobox>
+
+                                <!-- Blush selling price -->
+                                <lightning-input
+                                    type="number"
+                                    label="Blush retail selling price (INR)"
+                                    placeholder="Enter selling price"
+                                    min="0.01"
+                                    step="0.01"
+                                    value={item.basePrice}
+                                    data-id={item.itemId}
+                                    data-field="basePrice"
+                                    required
+                                    disabled={item.isSaving}
+                                    onchange={handleFieldChange}>
+                                </lightning-input>
+
+                                <!-- Sales channels -->
+                                <lightning-dual-listbox
+                                    name="salesChannels"
+                                    label="Sales channels"
+                                    source-label="Available"
+                                    selected-label="Selected"
+                                    options={channelOptions}
+                                    value={item.salesChannels}
+                                    data-id={item.itemId}
+                                    data-field="salesChannels"
+                                    disabled={item.isSaving}
+                                    onchange={handleFieldChange}>
+                                </lightning-dual-listbox>
+
+                                <!-- Import button -->
+                                <div class="import-button-container">
+
+                                    <lightning-button
+                                        label={item.importButtonLabel}
+                                        variant="brand"
+                                        data-id={item.itemId}
+                                        onclick={handleAddProduct}
+                                        disabled={item.isSaving}>
+                                    </lightning-button>
+
+                                    <template if:true={item.isSaving}>
+                                        <lightning-spinner
+                                            alternative-text="Importing product"
+                                            size="small">
+                                        </lightning-spinner>
+                                    </template>
+
+                                </div>
+
+                                <!-- Import success message -->
+                                <template if:true={item.importedMessage}>
+
+                                    <div
+                                        class="import-success"
+                                        role="status">
+
+                                        <lightning-icon
+                                            icon-name="utility:success"
+                                            alternative-text="Success"
+                                            size="x-small">
+                                        </lightning-icon>
+
+                                        <span>
+                                            {item.importedMessage}
+                                        </span>
+
+                                    </div>
+
+                                </template>
+
+                            </article>
+
+                        </div>
+
+                    </template>
+
+                </div>
+
+            </template>
+
+        </div>
+
+    </lightning-card>
+</template>
